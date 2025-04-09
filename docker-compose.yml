@@ -1,15 +1,13 @@
-version: '3.8'
-
+version: '3'
 services:
   backend:
     build: ./backend
-    volumes:
-      - ./backend/uploads:/app/uploads
     ports:
       - "5000:5000"
-    command: python app.py
+    volumes:
+      - ./backend/uploads:/app/uploads
 
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
+      - "8080:80"
