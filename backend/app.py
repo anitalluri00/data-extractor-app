@@ -8,29 +8,25 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-
     file = request.files['file']
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-    file.save(file_path)
+    filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(filepath)
 
     try:
         if file.filename.endswith('.csv'):
-            df = pd.read_csv(file_path)
-        elif file.filename.endswith(('.xlsx', '.xls')):
-            df = pd.read_excel(file_path)
+            df = pd.read_csv(filepath)
+        elif file.filename.endswith(('.xls', '.xlsx')):
+            df = pd.read_excel(filepath)
+        elif file.filename.endswith('.txt'):
+            with open(filepath, 'r') as f:
+                content = f.read()
+            return jsonify({"type": "txt", "content": content[:1000]})
         else:
-            return jsonify({'error': 'Unsupported file type'}), 400
+            return jsonify({"error": "Unsupported file format"}), 400
 
-        data = df.to_dict(orient='records')
-        return jsonify({'columns': df.columns.tolist(), 'data': data})
+        return jsonify({"type": "table", "columns": df.columns.tolist(), "rows": df.head(10).to_dict(orient='records')})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/')
-def index():
-    return 'Backend running'
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
