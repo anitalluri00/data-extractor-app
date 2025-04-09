@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>File Data Viewer</title>
+</head>
+<body>
+  <h2>Upload a CSV or Excel file</h2>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadFile()">Upload</button>
+  <br><br>
+  <table border="1" id="dataTable"></table>
+
+  <script>
+    function uploadFile() {
+      const input = document.getElementById('fileInput');
+      if (!input.files.length) return alert("Select a file");
+
+      const formData = new FormData();
+      formData.append('file', input.files[0]);
+
+      fetch('http://localhost:5000/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        const table = document.getElementById('dataTable');
+        table.innerHTML = '';
+
+        if (data.error) return alert(data.error);
+
+        const headers = data.columns;
+        const rows = data.data;
+
+        const headerRow = table.insertRow();
+        headers.forEach(col => {
+          const cell = headerRow.insertCell();
+          cell.outerHTML = `<th>${col}</th>`;
+        });
+
+        rows.forEach(row => {
+          const tr = table.insertRow();
+          headers.forEach(col => {
+            const cell = tr.insertCell();
+            cell.textContent = row[col];
+          });
+        });
+      });
+    }
+  </script>
+</body>
+</html>
